@@ -87,7 +87,15 @@
 
         // 🚀 ยิง API ข้ามเซิร์ฟเวอร์ไปหา Code.gs
         fetch(`${API_URL}?action=bindLine&hn=${hn}&an=${an}&lineId=${currentLineId}`)
-          .then(response => response.json())
+          .then(async response => {
+            // ดักจับก่อนเลยว่า Google ส่งอะไรกลับมา (เผื่อส่งหน้า Error HTML มา)
+            const text = await response.text(); 
+            try {
+               return JSON.parse(text); // พยายามแปลเป็น JSON
+            } catch (e) {
+               throw new Error("Google ตอบกลับมาผิดปกติ: " + text.substring(0, 40) + "...");
+            }
+          })
           .then(res => {
             if(res.success) {
                btn.innerText = "สำเร็จ! ปิดหน้าต่างได้เลย";
@@ -105,7 +113,8 @@
           .catch(err => {
              btn.innerText = "ลองใหม่อีกครั้ง";
              btn.disabled = false;
-             msg.innerText = "❌ การเชื่อมต่อขัดข้อง";
+             // 🚨 โชว์ Error ออกมาให้เห็นคาตาเลยว่าพังเพราะอะไร!
+             msg.innerText = "❌ ขัดข้อง: " + err.message; 
              msg.className = "mt-3 small fw-bold text-danger";
           });
       }
@@ -113,4 +122,5 @@
   </body>
 
 </html>
+
 
