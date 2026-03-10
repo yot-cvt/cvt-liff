@@ -86,7 +86,10 @@
         msg.innerText = "⏳ กำลังส่งข้อมูล...";
 
         // 🚀 ยิง API ข้ามเซิร์ฟเวอร์ไปหา Code.gs
-        fetch(`${API_URL}?action=bindLine&hn=${hn}&an=${an}&lineId=${currentLineId}`)
+        fetch(`${API_URL}?action=bindLine&hn=${hn}&an=${an}&lineId=${currentLineId}`, {
+  method: 'GET',
+  redirect: 'follow'
+})
           .then(async response => {
             // ดักจับก่อนเลยว่า Google ส่งอะไรกลับมา (เผื่อส่งหน้า Error HTML มา)
             const text = await response.text(); 
@@ -122,5 +125,6 @@
   </body>
 
 </html>
+
 
 
