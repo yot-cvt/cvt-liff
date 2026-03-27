@@ -3,47 +3,83 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ลงทะเบียนผู้ป่วย CVT</title>
+    <title>CVT Master Registry - ลงทะเบียน</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
       body { background-color: #f4f7f6; padding: 20px; font-family: sans-serif; }
-      .card { border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-top: 5vh; border: none;}
+      .card { border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-top: 2vh; border: none;}
       .brand-title { color: #00b900; font-weight: bold; } 
+      .btn-menu { border-radius: 10px; padding: 15px; font-size: 1.1rem; text-align: left; }
+      .icon-box { font-size: 1.5rem; margin-right: 10px; }
+      /* CSS สำหรับซ่อนหน้าจอ */
+      .hidden-view { display: none !important; }
     </style>
   </head>
   <body>
     <div class="container" style="max-width: 400px; margin: auto;">
       <div class="card p-4 text-center border-top border-success border-4">
-        <h4 class="brand-title mb-2">ผูกบัญชีผู้ป่วย</h4>
-        <p class="text-muted small mb-4">เชื่อมต่อข้อมูลการรักษากับ LINE ของท่าน</p>
         
-        <div id="profile-area" style="display:none;" class="mb-4 bg-light p-3 rounded border">
-          <img id="profile-img" src="" class="rounded-circle mb-2 shadow-sm" width="70" height="70">
+        <h4 class="brand-title mb-2">CVT Registry</h4>
+        <p class="text-muted small mb-3">ระบบเชื่อมต่อข้อมูลผ่าน LINE</p>
+        
+        <div id="profile-area" class="hidden-view mb-3 bg-light p-3 rounded border">
+          <img id="profile-img" src="" class="rounded-circle mb-2 shadow-sm" width="60" height="60">
           <div id="profile-name" class="fw-bold text-dark"></div>
         </div>
 
-        <div class="mb-3 text-start">
-          <label class="form-label fw-bold text-secondary">รหัสผู้ป่วย (HN)</label>
-          <input type="text" id="hn" class="form-control form-control-lg" placeholder="เช่น 123456" pattern="[0-9]*" inputmode="numeric">
+        <div id="loading-msg" class="fw-bold text-secondary my-4">⏳ กำลังโหลดข้อมูล LINE...</div>
+
+        <div id="view-menu" class="hidden-view">
+          <p class="fw-bold text-dark mb-3">กรุณาเลือกสถานะของท่าน</p>
+          <button class="btn btn-outline-primary btn-menu w-100 mb-3 fw-bold shadow-sm" onclick="switchView('view-patient')">
+            <span class="icon-box">🏥</span> สำหรับผู้ป่วย
+          </button>
+          <button class="btn btn-outline-secondary btn-menu w-100 mb-2 fw-bold shadow-sm" onclick="switchView('view-staff')">
+            <span class="icon-box">👨‍⚕️</span> สำหรับเจ้าหน้าที่
+          </button>
         </div>
-        <div class="mb-4 text-start">
-          <label class="form-label fw-bold text-secondary">รหัสการเข้ารักษา (AN)</label>
-          <input type="text" id="an" class="form-control form-control-lg" placeholder="เช่น 6600123" pattern="[0-9]*" inputmode="numeric">
+
+        <div id="view-patient" class="hidden-view">
+          <h5 class="fw-bold text-primary mb-3">ผูกบัญชีผู้ป่วย</h5>
+          <div class="mb-3 text-start">
+            <label class="form-label fw-bold text-secondary small">รหัสผู้ป่วย (HN)</label>
+            <input type="text" id="hn" class="form-control" placeholder="เช่น 123456" pattern="[0-9]*" inputmode="numeric">
+          </div>
+          <div class="mb-4 text-start">
+            <label class="form-label fw-bold text-secondary small">รหัสการเข้ารักษา (AN)</label>
+            <input type="text" id="an" class="form-control" placeholder="เช่น 6600123" pattern="[0-9]*" inputmode="numeric">
+          </div>
+          
+          <button id="btn-submit-patient" class="btn btn-primary w-100 fw-bold py-2 mb-2 shadow-sm" onclick="submitPatient()">ยืนยันข้อมูลผู้ป่วย</button>
+          <button class="btn btn-light w-100 fw-bold py-2 text-muted" onclick="switchView('view-menu')">ย้อนกลับ</button>
+          <div id="status-msg-patient" class="mt-2 small fw-bold"></div>
         </div>
-        
-        <button id="btn-submit" class="btn btn-success btn-lg w-100 fw-bold py-2 shadow-sm" onclick="submitBinding()" disabled>กำลังโหลดข้อมูล LINE...</button>
-        <div id="status-msg" class="mt-3 small fw-bold"></div>
+
+        <div id="view-staff" class="hidden-view">
+          <h5 class="fw-bold text-secondary mb-3">ลงทะเบียนเจ้าหน้าที่</h5>
+          <div class="mb-3 text-start">
+            <label class="form-label fw-bold text-secondary small">Username (รหัสแผนก)</label>
+            <input type="text" id="username" class="form-control" placeholder="เช่น ward1">
+          </div>
+          <div class="mb-4 text-start">
+            <label class="form-label fw-bold text-secondary small">Password (รหัสผ่าน)</label>
+            <input type="password" id="password" class="form-control" placeholder="****">
+          </div>
+          
+          <button id="btn-submit-staff" class="btn btn-dark w-100 fw-bold py-2 mb-2 shadow-sm" onclick="submitStaff()">เข้าสู่ระบบเจ้าหน้าที่</button>
+          <button class="btn btn-light w-100 fw-bold py-2 text-muted" onclick="switchView('view-menu')">ย้อนกลับ</button>
+          <div id="status-msg-staff" class="mt-2 small fw-bold"></div>
+        </div>
+
       </div>
     </div>
 
     <script>
       let currentLineId = "";
       
-      // 🚨 1. ใส่ LIFF ID ของคุณหมอตรงนี้
+      // 🚨 ตั้งค่า LIFF ID และ URL
       const LIFF_ID = "2009395948-je5kNUOI"; 
-      
-      // 🚨 2. เอาลิงก์ Web App (Code.gs) ที่เพิ่ง Deploy ใหม่มาใส่ตรงนี้
       const API_URL = "https://script.google.com/macros/s/AKfycbwPqCZbDF5Lle5EmXtIvb9YLzFP907mV6U6ArRojGOuioGo7lv3WuxhnbOho-Ffcq5wqw/exec";
 
       window.onload = function() {
@@ -52,80 +88,129 @@
             if (liff.isLoggedIn()) {
               liff.getProfile().then(profile => {
                 currentLineId = profile.userId; 
-                document.getElementById('profile-area').style.display = "block";
+                document.getElementById('loading-msg').style.display = "none";
+                document.getElementById('profile-area').classList.remove('hidden-view');
                 document.getElementById('profile-img').src = profile.pictureUrl;
                 document.getElementById('profile-name').innerText = "คุณ " + profile.displayName;
                 
-                let btn = document.getElementById('btn-submit');
-                btn.innerText = "ยืนยันการผูกบัญชี";
-                btn.disabled = false;
+                // โชว์เมนูหลัก
+                switchView('view-menu');
               });
             } else {
               liff.login(); 
             }
           })
           .catch(err => {
-            document.getElementById('status-msg').innerText = "Error: " + err.message;
-            document.getElementById('status-msg').className = "mt-3 small fw-bold text-danger";
+            document.getElementById('loading-msg').innerText = "❌ Error: " + err.message;
+            document.getElementById('loading-msg').className = "text-danger";
           });
       };
 
-      function submitBinding() {
+      // 🔄 ฟังก์ชันสลับหน้าจอ (หัวใจหลักของ SPA)
+      function switchView(targetViewId) {
+        document.getElementById('view-menu').classList.add('hidden-view');
+        document.getElementById('view-patient').classList.add('hidden-view');
+        document.getElementById('view-staff').classList.add('hidden-view');
+        
+        // เคลียร์ข้อความแจ้งเตือน
+        document.getElementById('status-msg-patient').innerText = "";
+        document.getElementById('status-msg-staff').innerText = "";
+
+        document.getElementById(targetViewId).classList.remove('hidden-view');
+      }
+
+      // 🏥 ฟังก์ชันส่งข้อมูลผู้ป่วย (ใช้ Action เดิม: bindLine)
+      function submitPatient() {
         const hn = document.getElementById('hn').value.trim();
         const an = document.getElementById('an').value.trim();
-        const btn = document.getElementById('btn-submit');
-        const msg = document.getElementById('status-msg');
+        const btn = document.getElementById('btn-submit-patient');
+        const msg = document.getElementById('status-msg-patient');
 
         if(!hn || !an) {
           msg.innerText = "⚠️ กรุณากรอก HN และ AN ให้ครบถ้วน";
+          msg.className = "mt-2 small fw-bold text-warning";
           return;
         }
 
-        btn.innerText = "กำลังบันทึกข้อมูล...";
+        btn.innerText = "กำลังบันทึก...";
         btn.disabled = true;
         msg.innerText = "⏳ กำลังส่งข้อมูล...";
+        msg.className = "mt-2 small fw-bold text-secondary";
 
-        // 🚀 ยิง API ข้ามเซิร์ฟเวอร์ไปหา Code.gs
-        fetch(`${API_URL}?action=bindLine&hn=${hn}&an=${an}&lineId=${currentLineId}`, {
-  method: 'GET',
-  redirect: 'follow'
-})
+        fetch(`${API_URL}?action=bindLine&hn=${hn}&an=${an}&lineId=${currentLineId}`, { method: 'GET', redirect: 'follow' })
           .then(async response => {
-            // ดักจับก่อนเลยว่า Google ส่งอะไรกลับมา (เผื่อส่งหน้า Error HTML มา)
             const text = await response.text(); 
-            try {
-               return JSON.parse(text); // พยายามแปลเป็น JSON
-            } catch (e) {
-               throw new Error("Google ตอบกลับมาผิดปกติ: " + text.substring(0, 40) + "...");
-            }
+            try { return JSON.parse(text); } 
+            catch (e) { throw new Error("พบข้อผิดพลาด"); }
           })
           .then(res => {
             if(res.success) {
-               btn.innerText = "สำเร็จ! ปิดหน้าต่างได้เลย";
-               btn.classList.replace("btn-success", "btn-secondary");
+               btn.innerText = "สำเร็จ!";
+               btn.classList.replace("btn-primary", "btn-success");
                msg.innerText = "✅ " + res.message;
-               msg.className = "mt-3 small fw-bold text-success";
+               msg.className = "mt-2 small fw-bold text-success";
                setTimeout(() => { liff.closeWindow(); }, 2000); 
             } else {
-               btn.innerText = "ลองใหม่อีกครั้ง";
+               btn.innerText = "ยืนยันข้อมูลผู้ป่วย";
                btn.disabled = false;
                msg.innerText = "❌ " + res.message;
-               msg.className = "mt-3 small fw-bold text-danger";
+               msg.className = "mt-2 small fw-bold text-danger";
             }
           })
           .catch(err => {
-             btn.innerText = "ลองใหม่อีกครั้ง";
+             btn.innerText = "ยืนยันข้อมูลผู้ป่วย";
              btn.disabled = false;
-             // 🚨 โชว์ Error ออกมาให้เห็นคาตาเลยว่าพังเพราะอะไร!
              msg.innerText = "❌ ขัดข้อง: " + err.message; 
-             msg.className = "mt-3 small fw-bold text-danger";
+             msg.className = "mt-2 small fw-bold text-danger";
+          });
+      }
+
+      // 👨‍⚕️ ฟังก์ชันส่งข้อมูลเจ้าหน้าที่ (ใช้ Action ใหม่: bindStaffLine)
+      function submitStaff() {
+        const user = document.getElementById('username').value.trim();
+        const pass = document.getElementById('password').value.trim();
+        const btn = document.getElementById('btn-submit-staff');
+        const msg = document.getElementById('status-msg-staff');
+
+        if(!user || !pass) {
+          msg.innerText = "⚠️ กรุณากรอก Username และ Password ให้ครบ";
+          msg.className = "mt-2 small fw-bold text-warning";
+          return;
+        }
+
+        btn.innerText = "กำลังตรวจสอบ...";
+        btn.disabled = true;
+        msg.innerText = "⏳ กำลังส่งข้อมูล...";
+        msg.className = "mt-2 small fw-bold text-secondary";
+
+        // 🚨 สังเกต action=bindStaffLine เราจะไปเขียนรับค่าตัวนี้ใน Code.gs
+        fetch(`${API_URL}?action=bindStaffLine&username=${user}&password=${pass}&lineId=${currentLineId}`, { method: 'GET', redirect: 'follow' })
+          .then(async response => {
+            const text = await response.text(); 
+            try { return JSON.parse(text); } 
+            catch (e) { throw new Error("พบข้อผิดพลาด"); }
+          })
+          .then(res => {
+            if(res.success) {
+               btn.innerText = "เข้าสู่ระบบสำเร็จ!";
+               btn.classList.replace("btn-dark", "btn-success");
+               msg.innerText = "✅ " + res.message;
+               msg.className = "mt-2 small fw-bold text-success";
+               setTimeout(() => { liff.closeWindow(); }, 2000); 
+            } else {
+               btn.innerText = "เข้าสู่ระบบเจ้าหน้าที่";
+               btn.disabled = false;
+               msg.innerText = "❌ " + res.message;
+               msg.className = "mt-2 small fw-bold text-danger";
+            }
+          })
+          .catch(err => {
+             btn.innerText = "เข้าสู่ระบบเจ้าหน้าที่";
+             btn.disabled = false;
+             msg.innerText = "❌ ขัดข้อง: " + err.message; 
+             msg.className = "mt-2 small fw-bold text-danger";
           });
       }
     </script>
   </body>
-
 </html>
-
-
-
-
