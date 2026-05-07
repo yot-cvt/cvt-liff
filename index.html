@@ -193,7 +193,21 @@
         btn.innerText = "กำลังบันทึก..."; btn.disabled = true;
         msg.innerText = "⏳ กำลังส่งข้อมูล..."; msg.className = "mt-2 small fw-bold text-secondary";
 
-        fetch(`${API_URL}?action=bindLine&hn=${hn}&an=${an}&lineId=${currentLineId}`, { method: 'GET', redirect: 'follow' })
+        // 🟢 1. แพ็กข้อมูลแบบ JSON ให้ action ตรงกับที่แก้ใน Code.gs (bindPatientLine)
+        const payload = JSON.stringify({ 
+          action: "bindPatientLine", 
+          hn: hn, 
+          an: an, 
+          lineId: currentLineId 
+        });
+
+        // 🟢 2. ยิง API แบบ POST
+        fetch(API_URL, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: payload,
+          redirect: 'follow'
+        })
           .then(async response => {
             const text = await response.text(); 
             try { return JSON.parse(text); } catch (e) { throw new Error("Google ตอบกลับมาผิดปกติ"); }
